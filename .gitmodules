@@ -1,0 +1,6 @@
+[submodule "ungoogled-chromium-portablelinux"]
+	path = ungoogled-chromium-portablelinux
+	url = https://github.com/ungoogled-software/ungoogled-chromium-portablelinux.git
+[submodule "arcomium"]
+	path = arcomium
+	url = https://github.com/VizzleTF/arcomium.git
