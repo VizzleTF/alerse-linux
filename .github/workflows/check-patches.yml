@@ -1,0 +1,28 @@
+# Checks in minutes, not a build, that the whole patch series applies to the
+# Chromium release source, Arcomium's patches with no fuzz (check-patches.sh).
+name: check-patches
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { submodules: recursive }
+
+      - name: Cache the Chromium source tarball
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: build-check/cache
+          key: chromium-${{ hashFiles('ungoogled-chromium-portablelinux/ungoogled-chromium/chromium_version.txt') }}
+
+      - name: Apply every patch
+        run: bash check-patches.sh

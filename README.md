@@ -61,6 +61,17 @@ docker run --rm -it -u "$(id -u):$(id -g)" -v "$PWD:/repo" chromium-builder:trix
     bash -c 'cd /repo/build/src && ninja -C out/Default chrome chromedriver'
 ```
 
+## Check the patches
+
+```sh
+./check-patches.sh
+```
+
+Applies the whole series to the Chromium release source in a few minutes:
+ungoogled-chromium's patches, then this repository's, then Arcomium's, which must
+apply with no fuzz. It downloads the release tarball once into `build-check/cache`
+and unpacks only the files the patches touch. CI runs it on every push.
+
 ## Change the patches
 
 Patches live in the `arcomium` submodule; see
