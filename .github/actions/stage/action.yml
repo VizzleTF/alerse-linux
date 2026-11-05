@@ -1,0 +1,75 @@
+# One stage of the Linux build, in ungoogled-chromium-portablelinux' build
+# container: the first prepares the source tree, later ones build until the
+# time runs out and hand the tree to the next one as an artifact.
+# Adapted from ungoogled-chromium-portablelinux (BSD-3-Clause).
+name: Stage
+description: Run one stage of the Arcomium Linux build
+
+inputs:
+  prepare-only:
+    description: "'true' to only download, patch and configure the source tree"
+    required: false
+    default: "false"
+  final:
+    description: "'true' for the last stage, which fails if the build is not done"
+    required: false
+    default: "false"
+
+outputs:
+  status:
+    description: "'running' while the build is not done, 'completed' when it is"
+    value: ${{ steps.build.outputs.status }}
+
+runs:
+  using: composite
+  steps:
+    - name: Assemble the upstream build
+      shell: bash
+      run: bash assemble.sh
+
+    - name: Download the build container
+      uses: actions/download-artifact@v8
+      with:
+        name: docker-image-${{ env.ARCH }}
+        path: /tmp
+
+    - name: Load the build container
+      shell: bash
+      run: docker load -i /tmp/chromium-builder.tar && rm /tmp/chromium-builder.tar
+
+    - name: Download the build tree
+      if: ${{ inputs.prepare-only != 'true' }}
+      uses: actions/download-artifact@v8
+      with:
+        name: build-cache-${{ env.ARCH }}
+        path: ungoogled-chromium-portablelinux/.github/cache/
+
+    - name: Unpack the build tree
+      if: ${{ inputs.prepare-only != 'true' }}
+      shell: bash
+      working-directory: ungoogled-chromium-portablelinux
+      run: bash ./.github/scripts/import-cache.sh
+
+    - name: Build
+      id: build
+      shell: bash
+      working-directory: ungoogled-chromium-portablelinux
+      env:
+        _prepare_only: ${{ inputs.prepare-only }}
+        _use_existing_image: "true"
+        _gha_final: ${{ inputs.final }}
+      run: bash ./scripts/docker-build.sh
+
+    - name: Pack the build tree
+      shell: bash
+      working-directory: ungoogled-chromium-portablelinux
+      run: bash ./.github/scripts/export-cache.sh
+
+    - name: Upload the build tree
+      uses: actions/upload-artifact@v7
+      with:
+        name: build-cache-${{ env.ARCH }}
+        path: ungoogled-chromium-portablelinux/.github/cache/build-cache-${{ env.ARCH }}.tar.zst
+        if-no-files-found: error
+        overwrite: true
+        retention-days: 2

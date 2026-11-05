@@ -1,0 +1,232 @@
+# Builds Arcomium for Linux for one architecture in up to 10 chained jobs: a
+# GitHub-hosted runner allows 6 hours per job and a full Chromium build takes
+# longer, so each stage builds until it times out and hands the tree to the
+# next one. The last job packages an AppImage and a tar.xz.
+# Adapted from ungoogled-chromium-portablelinux (BSD-3-Clause).
+name: build
+on:
+  workflow_call:
+    inputs:
+      arch:
+        description: x86_64 or arm64
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  ARCH: ${{ inputs.arch }}
+
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: recursive }
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build the build container
+        uses: docker/build-push-action@v7
+        with:
+          context: ./ungoogled-chromium-portablelinux/docker
+          file: ./ungoogled-chromium-portablelinux/docker/build.Dockerfile
+          tags: chromium-builder:trixie-slim
+          outputs: type=docker,dest=/tmp/chromium-builder.tar
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Upload the build container
+        uses: actions/upload-artifact@v7
+        with:
+          name: docker-image-${{ inputs.arch }}
+          path: /tmp/chromium-builder.tar
+          retention-days: 2
+
+      - uses: ./.github/actions/stage
+        with: { prepare-only: true }
+
+  build_01:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    needs: prep
+    outputs:
+      status: ${{ steps.stage.outputs.status }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: recursive }
+      - id: stage
+        uses: ./.github/actions/stage
+        with: { prepare-only: false }
+
+  build_02:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    if: needs.build_01.outputs.status == 'running'
+    needs: build_01
+    outputs:
+      status: ${{ steps.stage.outputs.status }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: recursive }
+      - id: stage
+        uses: ./.github/actions/stage
+        with: { prepare-only: false }
+
+  build_03:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    if: needs.build_02.outputs.status == 'running'
+    needs: build_02
+    outputs:
+      status: ${{ steps.stage.outputs.status }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: recursive }
+      - id: stage
+        uses: ./.github/actions/stage
+        with: { prepare-only: false }
+
+  build_04:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    if: needs.build_03.outputs.status == 'running'
+    needs: build_03
+    outputs:
+      status: ${{ steps.stage.outputs.status }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: recursive }
+      - id: stage
+        uses: ./.github/actions/stage
+        with: { prepare-only: false }
+
+  build_05:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    if: needs.build_04.outputs.status == 'running'
+    needs: build_04
+    outputs:
+      status: ${{ steps.stage.outputs.status }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: recursive }
+      - id: stage
+        uses: ./.github/actions/stage
+        with: { prepare-only: false }
+
+  build_06:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    if: needs.build_05.outputs.status == 'running'
+    needs: build_05
+    outputs:
+      status: ${{ steps.stage.outputs.status }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: recursive }
+      - id: stage
+        uses: ./.github/actions/stage
+        with: { prepare-only: false }
+
+  build_07:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    if: needs.build_06.outputs.status == 'running'
+    needs: build_06
+    outputs:
+      status: ${{ steps.stage.outputs.status }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: recursive }
+      - id: stage
+        uses: ./.github/actions/stage
+        with: { prepare-only: false }
+
+  build_08:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    if: needs.build_07.outputs.status == 'running'
+    needs: build_07
+    outputs:
+      status: ${{ steps.stage.outputs.status }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: recursive }
+      - id: stage
+        uses: ./.github/actions/stage
+        with: { prepare-only: false }
+
+  build_09:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    if: needs.build_08.outputs.status == 'running'
+    needs: build_08
+    outputs:
+      status: ${{ steps.stage.outputs.status }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: recursive }
+      - id: stage
+        uses: ./.github/actions/stage
+        with: { prepare-only: false }
+
+  build_10:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    if: needs.build_09.outputs.status == 'running'
+    needs: build_09
+    outputs:
+      status: ${{ steps.stage.outputs.status }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: recursive }
+      - id: stage
+        uses: ./.github/actions/stage
+        with: { prepare-only: false, final: true }
+
+  package:
+    runs-on: ubuntu-latest
+    needs: [build_01, build_02, build_03, build_04, build_05, build_06, build_07, build_08, build_09, build_10]
+    # The stage that finished the build is the last that ran; later ones are
+    # skipped, and a failed or cancelled one stops here.
+    if: ${{ !cancelled() && !failure() }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: recursive }
+
+      - run: bash assemble.sh
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Download the build tree
+        uses: actions/download-artifact@v8
+        with:
+          name: build-cache-${{ inputs.arch }}
+          path: ungoogled-chromium-portablelinux/.github/cache/
+
+      - name: Unpack the build tree
+        working-directory: ungoogled-chromium-portablelinux
+        run: bash ./.github/scripts/import-cache.sh
+
+      - name: Package an AppImage and a tar.xz
+        working-directory: ungoogled-chromium-portablelinux
+        env:
+          ARCOMIUM_VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
+        run: |
+          [ -n "$ARCOMIUM_VERSION" ] || unset ARCOMIUM_VERSION
+          bash ./package/docker-package.sh
+          ls -la build/release
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: packages-${{ inputs.arch }}
+          path: |
+            ungoogled-chromium-portablelinux/build/release/Arcomium-*.AppImage
+            ungoogled-chromium-portablelinux/build/release/Arcomium-*.AppImage.zsync
+            ungoogled-chromium-portablelinux/build/release/Arcomium-*_linux.tar.xz
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 4
