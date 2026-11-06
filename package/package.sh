@@ -36,7 +36,6 @@ _files="chrome
 chrome_100_percent.pak
 chrome_200_percent.pak
 chrome_crashpad_handler
-chromedriver
 chrome-wrapper
 icudtl.dat
 libEGL.so
@@ -61,6 +60,9 @@ for file in $_files; do
     cp -r "$_build_dir/src/out/Default/$file" "$_tarball_dir" &
 done
 wait
+# The setuid sandbox helper, for systems without unprivileged user namespaces;
+# only the tar.xz has it: an AppImage is mounted nosuid.
+cp "$_build_dir/src/out/Default/chrome_sandbox" "$_tarball_dir/chrome-sandbox"
 
 _size="$(du -sk "$_tarball_dir" | cut -f1)"
 
@@ -74,6 +76,7 @@ tar vcf - "$_tarball_name" \
 rm -rf "$_app_dir"
 mkdir -p "$_app_dir/opt/arcomium/" "$_app_dir/usr/share/icons/hicolor/48x48/apps/"
 cp -r "$_tarball_dir"/* "$_app_dir/opt/arcomium/"
+rm "$_app_dir/opt/arcomium/chrome-sandbox"
 cp "$_root_dir/package/arcomium.desktop" "$_app_dir"
 sed -i -e 's|Exec=arcomium|Exec=AppRun|g' "$_app_dir/arcomium.desktop"
 
@@ -81,7 +84,6 @@ cat > "$_app_dir/AppRun" <<'EOF'
 #!/bin/sh
 THIS="$(readlink -f "${0}")"
 HERE="$(dirname "${THIS}")"
-export LD_LIBRARY_PATH="${HERE}"/usr/lib:$PATH
 export CHROME_WRAPPER="${THIS}"
 "${HERE}"/opt/arcomium/chrome "$@"
 EOF
