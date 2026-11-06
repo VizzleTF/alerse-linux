@@ -10,24 +10,82 @@ both are git submodules.
 
 ## Download
 
-AppImages and tar.xz archives for x86_64 and arm64 are on the
-[Releases](https://github.com/VizzleTF/arcomium-linux/releases) page, with `SHA256SUMS`.
+Open the [latest release](https://github.com/VizzleTF/arcomium-linux/releases/latest) and
+download, under **Assets**, the file for your machine (`x86_64` for Intel and AMD, `arm64`
+for Arm):
 
-| Package | Run |
+| File | Run |
 |---|---|
-| `Arcomium-<version>-x86_64.AppImage` | `chmod +x Arcomium-*.AppImage && ./Arcomium-*.AppImage` |
-| `Arcomium-<version>-x86_64_linux.tar.xz` | Unpack, then `./chrome-wrapper` in the unpacked directory |
+| `Arcomium-<version>-<arch>.AppImage` | `chmod +x Arcomium-*.AppImage && ./Arcomium-*.AppImage` |
+| `Arcomium-<version>-<arch>_linux.tar.xz` | Unpack, then `./chrome-wrapper` in the unpacked directory |
+| `Arcomium-<version>-<arch>.AppImage.zsync` | Delta updates of the AppImage with [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate) |
+| `SHA256SUMS` | SHA-256 of every file in the release: `sha256sum -c --ignore-missing SHA256SUMS` |
+
+A release appears as soon as its first architecture is built, usually x86_64, and the
+other one's files are added to it when they are ready, some hours apart; `SHA256SUMS` is
+rewritten each time.
 
 To sync with your other devices, open `chrome://arcomium-sync`.
 
+### If Arcomium does not start: the sandbox
+
+Chromium's sandbox needs unprivileged user namespaces. Ubuntu 23.10 and later allow them
+only to programs an AppArmor profile lets in, so Arcomium exits with "No usable sandbox!"
+until it has one. Add it once (Ubuntu's own `/etc/apparmor.d/chrome` is the same):
+
+```sh
+sudo tee /etc/apparmor.d/arcomium > /dev/null <<'EOF'
+abi <abi/4.0>,
+include <tunables/global>
+
+profile arcomium /{opt/arcomium,tmp/.mount_*/opt/arcomium}/chrome flags=(unconfined) {
+  userns,
+  include if exists <local/arcomium>
+}
+EOF
+sudo apparmor_parser -r /etc/apparmor.d/arcomium
+```
+
+It covers the AppImage, which runs from `/tmp/.mount_*`, and the tar.xz unpacked to
+`/opt/arcomium`:
+
+```sh
+sudo mkdir -p /opt/arcomium
+sudo tar -xJf Arcomium-*_linux.tar.xz -C /opt/arcomium --strip-components=1
+/opt/arcomium/chrome-wrapper
+```
+
+On a system without user namespaces at all, the tar.xz can use the setuid sandbox
+helper it ships instead: run `sudo chown root:root chrome-sandbox && sudo chmod 4755
+chrome-sandbox` in its directory. Do not run Arcomium with `--no-sandbox`.
+
 ## How releases are built
 
-Pushing a tag `v*` runs [release.yml](.github/workflows/release.yml) on GitHub-hosted
+Pushing a tag runs [release.yml](.github/workflows/release.yml) on GitHub-hosted
 runners. A full Chromium build takes longer than the 6 hours a job may run, so
 [build.yml](.github/workflows/build.yml) chains up to 10 jobs per architecture: each
-builds until it times out and passes the build tree to the next one. The last job
-packages, and the release job publishes. Running the workflow by hand builds without
-publishing.
+builds until it times out and passes the build tree to the next one, and the jobs after
+the one that finishes do not start. The package job then packages, and
+[publish.yml](.github/workflows/publish.yml) adds the packages to the release right away,
+one architecture at a time. If one architecture fails, the other is still published;
+re-run the failed jobs to add it. Running the workflow by hand builds without publishing.
+
+x86_64 releases are built with profile-guided optimization (PGO), as Chrome is, with the
+profile the Chromium release tarball ships (`chrome/build/linux.pgo.txt` names it); the
+build stops before compiling if it is missing. There is no Linux arm64 profile, so arm64
+is built without PGO.
+
+### Versions and tags
+
+Tags are `vMAJOR.MINOR.PATCH`, and only patch releases are tagged here. `arcomium/VERSION`
+is the version of the core the submodule is on: a tag must have its `MAJOR.MINOR` and a
+`PATCH` no lower than its, so with `VERSION` 0.1.0 the tags `v0.1.0`, `v0.1.1` and so on
+are accepted and `v0.2.0` is not until the core moves to 0.2. The release workflow checks
+this first and fails before building.
+
+[dependabot](.github/dependabot.yml) proposes updates of the actions and submodules, and
+[upstream.yml](.github/workflows/upstream.yml) opens an issue every time
+ungoogled-chromium-portablelinux releases a newer Chromium.
 
 ## Build from source
 
@@ -45,10 +103,11 @@ ungoogled-chromium-portablelinux/package/docker-package.sh
 The browser is `ungoogled-chromium-portablelinux/build/src/out/Default/chrome`, the
 packages are in `ungoogled-chromium-portablelinux/build/release/`.
 
-`assemble.sh` adds the Arcomium patches, `arcomium/flags.gn`, the branding step and
-Arcomium's packaging to the ungoogled-chromium-portablelinux submodule. Running it again
-starts from the submodule as committed; `./assemble.sh --reset` restores the submodule.
-Neither touches the build tree in `build/`.
+`assemble.sh` adds the Arcomium patches, `arcomium/flags.gn`, the branding step, PGO for
+x86_64 and Arcomium's packaging to the ungoogled-chromium-portablelinux submodule, and
+builds the `chrome_sandbox` helper instead of chromedriver. Running it again starts from
+the submodule as committed; `./assemble.sh --reset` restores the submodule. Neither
+touches the build tree in `build/`.
 
 ### Rebuild after changing a patch
 
@@ -58,7 +117,7 @@ ninja in the container:
 ```sh
 cd ungoogled-chromium-portablelinux
 docker run --rm -it -u "$(id -u):$(id -g)" -v "$PWD:/repo" chromium-builder:trixie-slim \
-    bash -c 'cd /repo/build/src && ninja -C out/Default chrome chromedriver'
+    bash -c 'cd /repo/build/src && ninja -C out/Default chrome chrome_sandbox'
 ```
 
 ## Check the patches
