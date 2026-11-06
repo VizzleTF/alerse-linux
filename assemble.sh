@@ -2,7 +2,8 @@
 # Prepares ungoogled-chromium-portablelinux to build Arcomium: adds the patches of
 # the arcomium submodule to its patch series, arcomium/flags.gn to its GN flags,
 # a step that copies arcomium/branding over the source tree and renames the
-# product after patching, and Arcomium's packaging. Its build scripts then build
+# product after patching, PGO for x86_64, the chrome_sandbox target in place of
+# chromedriver, and Arcomium's packaging. Its build scripts then build
 # Arcomium. Running it again starts from the submodule as committed;
 # `assemble.sh --reset` only restores the submodule. The build tree is kept.
 set -euo pipefail
@@ -30,7 +31,7 @@ grep -v -e '^#' -e '^[[:space:]]*$' "$CORE/patches/series" | sed 's|^|arcomium/|
 # container, where the submodule is /repo.
 mkdir -p "$UP/arcomium"
 cp -r "$CORE/src" "$CORE/branding" "$CORE/tools" "$UP/arcomium/"
-python3 - "$UP/scripts/shared.sh" <<'EOF'
+python3 - "$UP/scripts/shared.sh" "$UP/.github/scripts/build.sh" <<'EOF'
 import sys
 from pathlib import Path
 p = Path(sys.argv[1])
@@ -40,7 +41,36 @@ step = ('        cp -r "${_root}/arcomium/src/." "${_src_dir}/"\n'
         '        cp -r "${_root}/arcomium/branding/." "${_src_dir}/"\n'
         '        python3 "${_root}/arcomium/tools/rename_product.py" "${_src_dir}"\n')
 assert t.count(anchor) == 1, 'apply_patches() changed upstream'
-p.write_text(t.replace(anchor, step + anchor))
+t = t.replace(anchor, step + anchor)
+
+# PGO on x86_64, as Chrome's builds have it: upstream's flags.gn turns it off,
+# but the release tarball ships Chromium's Linux profile. Builds for x86_64
+# fail here without it rather than build slower. arm64 has no Linux profile.
+anchor = '    echo "v8_target_cpu = \\"$_build_arch\\"" | tee -a "${_out_dir}/args.gn"\n'
+step = ('    if [ "$_build_arch" = x64 ]; then\n'
+        '        _pgo_profile="${_src_dir}/chrome/build/pgo_profiles/$(tr -d \'[:space:]\' < "${_src_dir}/chrome/build/linux.pgo.txt")"\n'
+        '        if [ ! -s "$_pgo_profile" ]; then\n'
+        '            echo "Arcomium: the PGO profile $_pgo_profile is missing" >&2\n'
+        '            exit 1\n'
+        '        fi\n'
+        '        printf \'%s\\n\' chrome_pgo_phase=2 v8_enable_builtins_optimization=true | tee -a "${_out_dir}/args.gn"\n'
+        '    fi\n')
+assert t.count(anchor) == 1, 'write_gn_args() changed upstream'
+t = t.replace(anchor, anchor + step)
+
+# Build the setuid sandbox helper for the tar.xz instead of chromedriver,
+# which the packages do not ship.
+targets = 'ninja -C out/Default chrome chromedriver'
+assert t.count(targets) == 1, 'maybe_build() changed upstream'
+p.write_text(t.replace(targets, 'ninja -C out/Default chrome chrome_sandbox'))
+
+p = Path(sys.argv[2])
+t = p.read_text()
+for old, new in ((targets, 'ninja -C out/Default chrome chrome_sandbox'),
+                 ('[ -x "${_out_dir}/chromedriver" ]', '[ -x "${_out_dir}/chrome_sandbox" ]')):
+    assert t.count(old) == 1, f'{p} changed upstream'
+    t = t.replace(old, new)
+p.write_text(t)
 EOF
 
 # Arcomium's packages instead of ungoogled-chromium's.

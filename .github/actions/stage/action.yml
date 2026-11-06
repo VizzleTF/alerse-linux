@@ -60,6 +60,18 @@ runs:
         _gha_final: ${{ inputs.final }}
       run: bash ./scripts/docker-build.sh
 
+    # x86_64 releases are built with PGO, or not at all (assemble.sh).
+    - name: Check PGO
+      if: ${{ inputs.prepare-only == 'true' && env.ARCH == 'x86_64' }}
+      shell: bash
+      working-directory: ungoogled-chromium-portablelinux/build/src
+      run: |
+        phase="$(sed -n 's/^[[:space:]]*chrome_pgo_phase[[:space:]]*=[[:space:]]*\([0-9]*\).*/\1/p' out/Default/args.gn | tail -1)"
+        profile="chrome/build/pgo_profiles/$(tr -d '[:space:]' < chrome/build/linux.pgo.txt)"
+        echo "chrome_pgo_phase=$phase, profile $profile"
+        [ "$phase" = 2 ] || { echo "::error::args.gn does not end with chrome_pgo_phase=2."; exit 1; }
+        [ -s "$profile" ] || { echo "::error::The PGO profile $profile is missing."; exit 1; }
+
     - name: Pack the build tree
       shell: bash
       working-directory: ungoogled-chromium-portablelinux
