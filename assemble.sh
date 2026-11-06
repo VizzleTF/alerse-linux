@@ -24,18 +24,20 @@ grep -v -e '^#' -e '^[[:space:]]*$' "$CORE/patches/series" | sed 's|^|arcomium/|
 # The GN flags, after the Linux ones.
 { echo; cat "$CORE/flags.gn"; } >> "$UP/flags.linux.gn"
 
-# Branding files cannot travel in patches, and renaming the product in the
-# strings moves hundreds of translations, which a script does better. Both run
-# in the build container, where the submodule is /repo.
+# Arcomium's own source files and binary branding files are copied over the
+# tree, not patched in, and renaming the product in the strings moves hundreds
+# of translations, which a script does better. They run in the build
+# container, where the submodule is /repo.
 mkdir -p "$UP/arcomium"
-cp -r "$CORE/branding" "$CORE/tools" "$UP/arcomium/"
+cp -r "$CORE/src" "$CORE/branding" "$CORE/tools" "$UP/arcomium/"
 python3 - "$UP/scripts/shared.sh" <<'EOF'
 import sys
 from pathlib import Path
 p = Path(sys.argv[1])
 t = p.read_text()
 anchor = '        touch "${_src_dir}/.patched.stamp"\n'
-step = ('        cp -r "${_root}/arcomium/branding/." "${_src_dir}/"\n'
+step = ('        cp -r "${_root}/arcomium/src/." "${_src_dir}/"\n'
+        '        cp -r "${_root}/arcomium/branding/." "${_src_dir}/"\n'
         '        python3 "${_root}/arcomium/tools/rename_product.py" "${_src_dir}"\n')
 assert t.count(anchor) == 1, 'apply_patches() changed upstream'
 p.write_text(t.replace(anchor, step + anchor))
