@@ -27,10 +27,11 @@ grep -v -e '^#' -e '^[[:space:]]*$' "$CORE/patches/series" | sed 's|^|arcomium/|
 
 # Arcomium's own source files and binary branding files are copied over the
 # tree, not patched in, and renaming the product in the strings moves hundreds
-# of translations, which a script does better. They run in the build
+# of translations, which a script does better; the script also numbers the
+# release in chrome/VERSION from arcomium/VERSION. They run in the build
 # container, where the submodule is /repo.
 mkdir -p "$UP/arcomium"
-cp -r "$CORE/src" "$CORE/branding" "$CORE/tools" "$UP/arcomium/"
+cp -r "$CORE/src" "$CORE/branding" "$CORE/tools" "$CORE/VERSION" "$UP/arcomium/"
 python3 - "$UP/scripts/shared.sh" "$UP/.github/scripts/build.sh" <<'EOF'
 import sys
 from pathlib import Path
