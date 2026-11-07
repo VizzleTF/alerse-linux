@@ -27,6 +27,16 @@ rewritten each time.
 
 To sync with your other devices, open `chrome://arcomium-sync`.
 
+The only release so far, 0.1.1, is on Chromium 156 and keeps the profile in
+`~/.config/chromium`. From the first release on Chromium 157 the profile is in
+`~/.config/arcomium`; its first start moves an Arcomium profile from `~/.config/chromium`,
+or keeps using it there if it cannot be moved.
+
+Arcomium does not update itself. AppImage users can update with the `.zsync` file and
+AppImageUpdate; otherwise check the releases page. From the first release on Chromium 157
+the menu of the sidebar's logo shows "Update to Arcomium X.Y.Z" when a newer release is
+out; 0.1.1 has no such notice.
+
 ### If Arcomium does not start: the sandbox
 
 Chromium's sandbox needs unprivileged user namespaces. Ubuntu 23.10 and later allow them
@@ -107,7 +117,9 @@ packages are in `ungoogled-chromium-portablelinux/build/release/`.
 
 `assemble.sh` adds the Arcomium patches, `arcomium/flags.gn`, the branding step, PGO for
 x86_64 and Arcomium's packaging to the ungoogled-chromium-portablelinux submodule, and
-builds the `chrome_sandbox` helper instead of chromedriver. Running it again starts from
+builds the `chrome_sandbox` helper instead of chromedriver, which no package ships. It
+also copies the core's `VERSION` into the build, which stamps the release into the
+Chromium version number. Running it again starts from
 the submodule as committed; `./assemble.sh --reset` restores the submodule. Neither
 touches the build tree in `build/`.
 
