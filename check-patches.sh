@@ -1,7 +1,7 @@
 #!/bin/bash
 # Checks that the whole patch series applies to the Chromium release source:
 # ungoogled-chromium's patches, ungoogled-chromium-portablelinux' and then
-# Arcomium's, which must apply with no fuzz. It downloads the release tarball
+# Alerse's, which must apply with no fuzz. It downloads the release tarball
 # (hash-checked by ungoogled-chromium's downloads.py) and unpacks only the files
 # the patches touch, so it takes minutes, not a build.
 #

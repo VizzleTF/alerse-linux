@@ -11,7 +11,7 @@ on:
         required: true
         type: string
       arcomium:
-        description: Arcomium version, the tag without its v
+        description: Alerse version, the tag without its v
         required: true
         type: string
       chromium:
@@ -47,9 +47,9 @@ jobs:
 
       - name: Create the release
         env:
-          TITLE: Arcomium ${{ inputs.arcomium }} for Linux
+          TITLE: Alerse ${{ inputs.arcomium }} for Linux
           NOTES: |
-            Arcomium ${{ inputs.arcomium }} for Linux, Chromium ${{ inputs.chromium }} (ungoogled-chromium).
+            Alerse ${{ inputs.arcomium }} for Linux, Chromium ${{ inputs.chromium }} (ungoogled-chromium).
 
             Packages for each architecture appear here as soon as it is built; `SHA256SUMS` covers every file.
         run: |
@@ -58,7 +58,7 @@ jobs:
           fi
 
       - name: Upload the packages
-        run: gh release upload "$TAG" packages/Arcomium-* --clobber
+        run: gh release upload "$TAG" packages/Alerse-* packages/Arcomium-* --clobber
 
       - name: Rewrite SHA256SUMS
         run: bash .github/scripts/release-checksums.sh "$TAG" packages

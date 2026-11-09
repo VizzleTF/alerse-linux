@@ -1,5 +1,5 @@
 # Checks in minutes, not a build, that the whole patch series applies to the
-# Chromium release source, Arcomium's patches with no fuzz (check-patches.sh).
+# Chromium release source, Alerse's patches with no fuzz (check-patches.sh).
 name: check-patches
 on:
   push:

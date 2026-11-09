@@ -1,5 +1,5 @@
 #!/bin/bash
-# Packages Arcomium as an AppImage and a tar.xz under build/release/.
+# Packages Alerse as an AppImage and a tar.xz under build/release/.
 # Adapted from ungoogled-chromium-portablelinux (BSD-3-Clause).
 set -euo pipefail
 
@@ -7,12 +7,12 @@ _current_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 _root_dir="$(cd "$_current_dir/.." && pwd)"
 _build_dir="$_root_dir/build"
 _release_dir="$_build_dir/release"
-_app_dir="$_release_dir/Arcomium.AppDir"
+_app_dir="$_release_dir/Alerse.AppDir"
 
 _chromium_version=$(cat "$_root_dir/ungoogled-chromium/chromium_version.txt")
 _ungoogled_revision=$(cat "$_root_dir/ungoogled-chromium/revision.txt")
 
-_app_name="Arcomium"
+_app_name="Alerse"
 # The release tag without its v, or the Chromium version and revision.
 _version="${ARCOMIUM_VERSION:-$_chromium_version-$_ungoogled_revision}"
 _version="${_version#v}"
@@ -28,7 +28,7 @@ if [ "$_arch" = "x64" ]; then
 fi
 
 _release_name="$_app_name-$_version-$_arch"
-_update_info="gh-releases-zsync|VizzleTF|arcomium-linux|latest|$_app_name-*-$_arch.AppImage.zsync"
+_update_info="gh-releases-zsync|VizzleTF|alerse-linux|latest|$_app_name-*-$_arch.AppImage.zsync"
 _tarball_name="${_release_name}_linux"
 _tarball_dir="$_release_dir/$_tarball_name"
 
@@ -74,23 +74,23 @@ tar vcf - "$_tarball_name" \
 
 # create AppImage
 rm -rf "$_app_dir"
-mkdir -p "$_app_dir/opt/arcomium/" "$_app_dir/usr/share/icons/hicolor/48x48/apps/"
-cp -r "$_tarball_dir"/* "$_app_dir/opt/arcomium/"
-rm "$_app_dir/opt/arcomium/chrome-sandbox"
-cp "$_root_dir/package/arcomium.desktop" "$_app_dir"
-sed -i -e 's|Exec=arcomium|Exec=AppRun|g' "$_app_dir/arcomium.desktop"
+mkdir -p "$_app_dir/opt/alerse/" "$_app_dir/usr/share/icons/hicolor/48x48/apps/"
+cp -r "$_tarball_dir"/* "$_app_dir/opt/alerse/"
+rm "$_app_dir/opt/alerse/chrome-sandbox"
+cp "$_root_dir/package/alerse.desktop" "$_app_dir"
+sed -i -e 's|Exec=alerse|Exec=AppRun|g' "$_app_dir/alerse.desktop"
 
 cat > "$_app_dir/AppRun" <<'EOF'
 #!/bin/sh
 THIS="$(readlink -f "${0}")"
 HERE="$(dirname "${THIS}")"
 export CHROME_WRAPPER="${THIS}"
-"${HERE}"/opt/arcomium/chrome "$@"
+"${HERE}"/opt/alerse/chrome "$@"
 EOF
 chmod a+x "$_app_dir/AppRun"
 
-cp "${_app_dir}/opt/arcomium/product_logo_48.png" "$_app_dir/usr/share/icons/hicolor/48x48/apps/arcomium.png"
-cp "${_app_dir}/usr/share/icons/hicolor/48x48/apps/arcomium.png" "$_app_dir"
+cp "${_app_dir}/opt/alerse/product_logo_48.png" "$_app_dir/usr/share/icons/hicolor/48x48/apps/alerse.png"
+cp "${_app_dir}/usr/share/icons/hicolor/48x48/apps/alerse.png" "$_app_dir"
 
 export APPIMAGETOOL_APP_NAME="$_app_name"
 export VERSION="$_version"
@@ -101,5 +101,10 @@ appimagetool \
     "$_release_name.AppImage" &
 popd
 wait
+
+# Arcomium's AppImages (up to 0.1.7) look for Arcomium-*.AppImage.zsync in the
+# latest release: the same file under that name updates them to Alerse's AppImage,
+# which it names.
+cp "$_release_dir/$_release_name.AppImage.zsync" \n    "$_release_dir/Arcomium-$_version-$_arch.AppImage.zsync"
 
 rm -rf "$_tarball_dir" "$_app_dir"

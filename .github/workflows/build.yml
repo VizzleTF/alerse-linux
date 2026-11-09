@@ -1,4 +1,4 @@
-# Builds Arcomium for Linux for one architecture in up to 10 chained jobs: a
+# Builds Alerse for Linux for one architecture in up to 10 chained jobs: a
 # GitHub-hosted runner allows 6 hours per job and a full Chromium build takes
 # longer, so each stage builds until it times out and hands the tree to the
 # next one. The last job packages an AppImage and a tar.xz.
@@ -224,9 +224,10 @@ jobs:
         with:
           name: packages-${{ inputs.arch }}
           path: |
-            ungoogled-chromium-portablelinux/build/release/Arcomium-*.AppImage
+            ungoogled-chromium-portablelinux/build/release/Alerse-*.AppImage
+            ungoogled-chromium-portablelinux/build/release/Alerse-*.AppImage.zsync
+            ungoogled-chromium-portablelinux/build/release/Alerse-*_linux.tar.xz
             ungoogled-chromium-portablelinux/build/release/Arcomium-*.AppImage.zsync
-            ungoogled-chromium-portablelinux/build/release/Arcomium-*_linux.tar.xz
           if-no-files-found: error
           compression-level: 0
           retention-days: 4

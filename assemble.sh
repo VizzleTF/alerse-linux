@@ -1,10 +1,10 @@
 #!/bin/bash
-# Prepares ungoogled-chromium-portablelinux to build Arcomium: adds the patches of
+# Prepares ungoogled-chromium-portablelinux to build Alerse: adds the patches of
 # the arcomium submodule to its patch series, arcomium/flags.gn to its GN flags,
 # a step that copies arcomium/branding over the source tree and renames the
 # product after patching, PGO for x86_64, the chrome_sandbox target in place of
-# chromedriver, and Arcomium's packaging. Its build scripts then build
-# Arcomium. Running it again starts from the submodule as committed;
+# chromedriver, and Alerse's packaging. Its build scripts then build
+# Alerse. Running it again starts from the submodule as committed;
 # `assemble.sh --reset` only restores the submodule. The build tree is kept.
 set -euo pipefail
 
@@ -25,7 +25,7 @@ grep -v -e '^#' -e '^[[:space:]]*$' "$CORE/patches/series" | sed 's|^|arcomium/|
 # The GN flags, after the Linux ones.
 { echo; cat "$CORE/flags.gn"; } >> "$UP/flags.linux.gn"
 
-# Arcomium's own source files and binary branding files are copied over the
+# Alerse's own source files and binary branding files are copied over the
 # tree, not patched in, and renaming the product in the strings moves hundreds
 # of translations, which a script does better; the script also numbers the
 # release in chrome/VERSION from arcomium/VERSION. They run in the build
@@ -51,7 +51,7 @@ anchor = '    echo "v8_target_cpu = \\"$_build_arch\\"" | tee -a "${_out_dir}/ar
 step = ('    if [ "$_build_arch" = x64 ]; then\n'
         '        _pgo_profile="${_src_dir}/chrome/build/pgo_profiles/$(tr -d \'[:space:]\' < "${_src_dir}/chrome/build/linux.pgo.txt")"\n'
         '        if [ ! -s "$_pgo_profile" ]; then\n'
-        '            echo "Arcomium: the PGO profile $_pgo_profile is missing" >&2\n'
+        '            echo "Alerse: the PGO profile $_pgo_profile is missing" >&2\n'
         '            exit 1\n'
         '        fi\n'
         '        printf \'%s\\n\' chrome_pgo_phase=2 v8_enable_builtins_optimization=true | tee -a "${_out_dir}/args.gn"\n'
@@ -74,11 +74,11 @@ for old, new in ((targets, 'ninja -C out/Default chrome chrome_sandbox'),
 p.write_text(t)
 EOF
 
-# Arcomium's packages instead of ungoogled-chromium's.
+# Alerse's packages instead of ungoogled-chromium's.
 cp "$ROOT/package/package.sh" "$UP/scripts/package.sh"
-cp "$ROOT/package/arcomium.desktop" "$UP/package/arcomium.desktop"
+cp "$ROOT/package/alerse.desktop" "$UP/package/alerse.desktop"
 # Its packages are named after the release tag, when there is one.
 sed -i 's|-e APPIMAGE_EXTRACT_AND_RUN=1|& -e ARCOMIUM_VERSION|' "$UP/package/docker-package.sh"
 grep -q ARCOMIUM_VERSION "$UP/package/docker-package.sh"
 
-echo "assembled: $(grep -c '^arcomium/' "$UP/patches/series") Arcomium patches"
+echo "assembled: $(grep -c '^arcomium/' "$UP/patches/series") Alerse patches"
