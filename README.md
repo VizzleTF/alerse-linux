@@ -1,4 +1,10 @@
-# Alerse for Linux
+<p align="center">
+  <img src="https://raw.githubusercontent.com/VizzleTF/alerse/main/artwork/alerse_256.png" width="120" alt="The Alerse icon">
+</p>
+
+<h1 align="center">Alerse for Linux</h1>
+
+<p align="center">The Linux build of Alerse, a sidebar browser for people moving from Arc.</p>
 
 Linux builds of [Alerse](https://github.com/VizzleTF/alerse) (called Arcomium up to
 0.1.7), an Arc-style browser
@@ -7,7 +13,11 @@ on ungoogled-chromium. This repository builds the
 [ungoogled-chromium-portablelinux](https://github.com/ungoogled-software/ungoogled-chromium-portablelinux);
 both are git submodules.
 
-![Alerse](https://raw.githubusercontent.com/VizzleTF/alerse/main/docs/images/sidebar.png)
+![Alerse: the Personal Space with pinned items, a Reading folder and favorites](https://raw.githubusercontent.com/VizzleTF/alerse/main/docs/images/sidebar.png)
+
+Features: see [Features](https://github.com/VizzleTF/alerse#features) and
+[Differences from Arc](https://github.com/VizzleTF/alerse#differences-from-arc). On Linux
+Alerse looks as on Windows: Arc for macOS everywhere but the top bar.
 
 ## Download
 
