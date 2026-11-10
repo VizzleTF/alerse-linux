@@ -214,9 +214,9 @@ jobs:
       - name: Package an AppImage and a tar.xz
         working-directory: ungoogled-chromium-portablelinux
         env:
-          ARCOMIUM_VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
+          ALERSE_VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
         run: |
-          [ -n "$ARCOMIUM_VERSION" ] || unset ARCOMIUM_VERSION
+          [ -n "$ALERSE_VERSION" ] || unset ALERSE_VERSION
           bash ./package/docker-package.sh
           ls -la build/release
 
@@ -227,7 +227,7 @@ jobs:
             ungoogled-chromium-portablelinux/build/release/Alerse-*.AppImage
             ungoogled-chromium-portablelinux/build/release/Alerse-*.AppImage.zsync
             ungoogled-chromium-portablelinux/build/release/Alerse-*_linux.tar.xz
-            ungoogled-chromium-portablelinux/build/release/Arcomium-*.AppImage.zsync
+            ungoogled-chromium-portablelinux/build/release/Alerse-*.AppImage.zsync
           if-no-files-found: error
           compression-level: 0
           retention-days: 4

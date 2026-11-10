@@ -6,10 +6,9 @@
 
 <p align="center">The Linux build of Alerse, a sidebar browser for people moving from Arc.</p>
 
-Linux builds of [Alerse](https://github.com/VizzleTF/alerse) (called Arcomium up to
-0.1.7), an Arc-style browser
+Linux builds of [Alerse](https://github.com/VizzleTF/alerse), an Arc-style browser
 on ungoogled-chromium. This repository builds the
-[arcomium](https://github.com/VizzleTF/alerse) patch series on top of
+[alerse](https://github.com/VizzleTF/alerse) patch series on top of
 [ungoogled-chromium-portablelinux](https://github.com/ungoogled-software/ungoogled-chromium-portablelinux);
 both are git submodules.
 
@@ -36,15 +35,14 @@ A release appears as soon as its first architecture is built, usually x86_64, an
 other one's files are added to it when they are ready, some hours apart; `SHA256SUMS` is
 rewritten each time.
 
-To sync with your other devices, open `chrome://arcomium-sync`.
+To sync with your other devices, open `chrome://alerse-sync`.
 
-The only release so far, Arcomium 0.1.1, is on Chromium 156 and keeps the profile in
-`~/.config/chromium`. From the first release on Chromium 157, named Alerse (Arcomium's new
-name), the profile is in `~/.config/alerse`; its first start moves Arcomium's profile
-there from `~/.config/arcomium` or `~/.config/chromium`, or keeps using it where it is
-while Arcomium still runs. Delete Arcomium's AppImage or folder afterwards. Arcomium's
-AppImages update to Alerse's with AppImageUpdate: each release also carries the `.zsync`
-under Arcomium's name.
+The only release so far, 0.1.1, is on Chromium 156, released under the project's
+earlier name, and keeps the profile in `~/.config/chromium`. From the first release on
+Chromium 157 the profile is in `~/.config/alerse`; its first start moves an earlier
+release's profile there, or keeps using it where it is while that release still runs.
+Delete the old AppImage or folder afterwards; it updates to Alerse's with
+AppImageUpdate, as each release also carries a `.zsync` under the old file name.
 
 Alerse does not update itself. AppImage users can update with the `.zsync` file and
 AppImageUpdate; otherwise check the releases page. From the first release on Chromium 157
@@ -101,7 +99,7 @@ is built without PGO.
 
 ### Versions and tags
 
-A release is tagged `v` + `arcomium/VERSION`, the version of the core the submodule is
+A release is tagged `v` + `alerse/VERSION`, the version of the core the submodule is
 on: the build compiles that version into the browser and into its Chromium version number
 (see [versioning](https://github.com/VizzleTF/alerse/blob/main/docs/versioning.md)), so a
 release of this repository alone raises the core's `VERSION` too. That number must also be
@@ -120,7 +118,7 @@ The build runs in upstream's Debian container, so no other packages are needed.
 
 ```sh
 git clone --recurse-submodules https://github.com/VizzleTF/alerse-linux.git
-cd arcomium-linux
+cd alerse-linux
 ./assemble.sh
 ungoogled-chromium-portablelinux/scripts/docker-build.sh
 ungoogled-chromium-portablelinux/package/docker-package.sh
@@ -129,7 +127,7 @@ ungoogled-chromium-portablelinux/package/docker-package.sh
 The browser is `ungoogled-chromium-portablelinux/build/src/out/Default/chrome`, the
 packages are in `ungoogled-chromium-portablelinux/build/release/`.
 
-`assemble.sh` adds the Alerse patches, `arcomium/flags.gn`, the branding step, PGO for
+`assemble.sh` adds the Alerse patches, `alerse/flags.gn`, the branding step, PGO for
 x86_64 and Alerse's packaging to the ungoogled-chromium-portablelinux submodule, and
 builds the `chrome_sandbox` helper instead of chromedriver, which no package ships. It
 also copies the core's `VERSION` into the build, which stamps the release into the
@@ -161,7 +159,7 @@ and unpacks only the files the patches touch. CI runs it on every push.
 
 ## Change the patches
 
-Patches live in the `arcomium` submodule; see
+Patches live in the `alerse` submodule; see
 [Writing and refreshing patches](https://github.com/VizzleTF/alerse/blob/main/docs/patching.md).
 
 ## License

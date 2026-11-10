@@ -43,7 +43,7 @@ failed=0
 for patch in "${PATCHES[@]}"; do
   args=(-p1 --ignore-whitespace --forward --no-backup-if-mismatch -s -i "$patch")
   case "$patch" in
-    */patches/arcomium/*) args+=(--fuzz=0) ;;
+    */patches/alerse/*) args+=(--fuzz=0) ;;
   esac
   if ! (cd "$WORK/src" && patch "${args[@]}" > "$WORK/patch.out" 2>&1); then
     echo "FAILED: ${patch#"$UP/"}"

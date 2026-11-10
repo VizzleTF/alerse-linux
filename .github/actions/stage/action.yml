@@ -3,7 +3,7 @@
 # time runs out and hand the tree to the next one as an artifact.
 # Adapted from ungoogled-chromium-portablelinux (BSD-3-Clause).
 name: Stage
-description: Run one stage of the Arcomium Linux build
+description: Run one stage of the Alerse Linux build
 
 inputs:
   prepare-only:

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Prepares ungoogled-chromium-portablelinux to build Alerse: adds the patches of
-# the arcomium submodule to its patch series, arcomium/flags.gn to its GN flags,
-# a step that copies arcomium/branding over the source tree and renames the
+# the alerse submodule to its patch series, alerse/flags.gn to its GN flags,
+# a step that copies alerse/branding over the source tree and renames the
 # product after patching, PGO for x86_64, the chrome_sandbox target in place of
 # chromedriver, and Alerse's packaging. Its build scripts then build
 # Alerse. Running it again starts from the submodule as committed;
@@ -10,7 +10,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UP="$ROOT/ungoogled-chromium-portablelinux"
-CORE="$ROOT/arcomium"
+CORE="$ROOT/alerse"
 
 # Restore the submodule; build/ is ignored there, so the build tree stays.
 git -C "$UP" checkout -q -- .
@@ -18,8 +18,8 @@ git -C "$UP" clean -fdq
 [ "${1:-}" = "--reset" ] && exit 0
 
 # The patches, after upstream's.
-cp -r "$CORE/patches" "$UP/patches/arcomium"
-grep -v -e '^#' -e '^[[:space:]]*$' "$CORE/patches/series" | sed 's|^|arcomium/|' \
+cp -r "$CORE/patches" "$UP/patches/alerse"
+grep -v -e '^#' -e '^[[:space:]]*$' "$CORE/patches/series" | sed 's|^|alerse/|' \
     >> "$UP/patches/series"
 
 # The GN flags, after the Linux ones.
@@ -28,19 +28,19 @@ grep -v -e '^#' -e '^[[:space:]]*$' "$CORE/patches/series" | sed 's|^|arcomium/|
 # Alerse's own source files and binary branding files are copied over the
 # tree, not patched in, and renaming the product in the strings moves hundreds
 # of translations, which a script does better; the script also numbers the
-# release in chrome/VERSION from arcomium/VERSION. They run in the build
+# release in chrome/VERSION from alerse/VERSION. They run in the build
 # container, where the submodule is /repo.
-mkdir -p "$UP/arcomium"
-cp -r "$CORE/src" "$CORE/branding" "$CORE/tools" "$CORE/VERSION" "$UP/arcomium/"
+mkdir -p "$UP/alerse"
+cp -r "$CORE/src" "$CORE/branding" "$CORE/tools" "$CORE/VERSION" "$UP/alerse/"
 python3 - "$UP/scripts/shared.sh" "$UP/.github/scripts/build.sh" <<'EOF'
 import sys
 from pathlib import Path
 p = Path(sys.argv[1])
 t = p.read_text()
 anchor = '        touch "${_src_dir}/.patched.stamp"\n'
-step = ('        cp -r "${_root}/arcomium/src/." "${_src_dir}/"\n'
-        '        cp -r "${_root}/arcomium/branding/." "${_src_dir}/"\n'
-        '        python3 "${_root}/arcomium/tools/rename_product.py" "${_src_dir}"\n')
+step = ('        cp -r "${_root}/alerse/src/." "${_src_dir}/"\n'
+        '        cp -r "${_root}/alerse/branding/." "${_src_dir}/"\n'
+        '        python3 "${_root}/alerse/tools/rename_product.py" "${_src_dir}"\n')
 assert t.count(anchor) == 1, 'apply_patches() changed upstream'
 t = t.replace(anchor, step + anchor)
 
@@ -78,7 +78,7 @@ EOF
 cp "$ROOT/package/package.sh" "$UP/scripts/package.sh"
 cp "$ROOT/package/alerse.desktop" "$UP/package/alerse.desktop"
 # Its packages are named after the release tag, when there is one.
-sed -i 's|-e APPIMAGE_EXTRACT_AND_RUN=1|& -e ARCOMIUM_VERSION|' "$UP/package/docker-package.sh"
-grep -q ARCOMIUM_VERSION "$UP/package/docker-package.sh"
+sed -i 's|-e APPIMAGE_EXTRACT_AND_RUN=1|& -e ALERSE_VERSION|' "$UP/package/docker-package.sh"
+grep -q ALERSE_VERSION "$UP/package/docker-package.sh"
 
-echo "assembled: $(grep -c '^arcomium/' "$UP/patches/series") Alerse patches"
+echo "assembled: $(grep -c '^alerse/' "$UP/patches/series") Alerse patches"

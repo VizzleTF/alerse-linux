@@ -14,7 +14,7 @@ _ungoogled_revision=$(cat "$_root_dir/ungoogled-chromium/revision.txt")
 
 _app_name="Alerse"
 # The release tag without its v, or the Chromium version and revision.
-_version="${ARCOMIUM_VERSION:-$_chromium_version-$_ungoogled_revision}"
+_version="${ALERSE_VERSION:-$_chromium_version-$_ungoogled_revision}"
 _version="${_version#v}"
 
 _arch=$(cat "$_build_dir/src/out/Default/args.gn" \
@@ -102,9 +102,9 @@ appimagetool \
 popd
 wait
 
-# Arcomium's AppImages (up to 0.1.7) look for Arcomium-*.AppImage.zsync in the
+# Alerse's AppImages (up to 0.1.7) look for Alerse-*.AppImage.zsync in the
 # latest release: the same file under that name updates them to Alerse's AppImage,
 # which it names.
-cp "$_release_dir/$_release_name.AppImage.zsync" \n    "$_release_dir/Arcomium-$_version-$_arch.AppImage.zsync"
+cp "$_release_dir/$_release_name.AppImage.zsync" \n    "$_release_dir/Alerse-$_version-$_arch.AppImage.zsync"
 
 rm -rf "$_tarball_dir" "$_app_dir"

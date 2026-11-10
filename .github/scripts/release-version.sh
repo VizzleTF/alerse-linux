@@ -1,14 +1,14 @@
 #!/bin/bash
-# Writes the release's versions to $GITHUB_OUTPUT: `arcomium` (arcomium/VERSION)
+# Writes the release's versions to $GITHUB_OUTPUT: `alerse` (alerse/VERSION)
 # and `chromium`.
 #
-# A release tag is v + arcomium/VERSION: tools/rename_product.py builds that
+# A release tag is v + alerse/VERSION: tools/rename_product.py builds that
 # version into the browser (its update check compares it with the latest
-# release's tag) and into Chromium's version number (PATCH x 100 + Arcomium's
-# PATCH, see arcomium/docs/versioning.md), so a release of the platform alone
+# release's tag) and into Chromium's version number (PATCH x 100 + Alerse's
+# PATCH, see alerse/docs/versioning.md), so a release of the platform alone
 # raises VERSION too. That number must also be above the latest release's, or
 # the Windows installer would not install over it: a release on the same
-# Chromium cannot lower Arcomium's PATCH (0.1.7 is followed by 0.2.8, not
+# Chromium cannot lower Alerse's PATCH (0.1.7 is followed by 0.2.8, not
 # 0.2.0). The latest release is read with gh (GH_TOKEN, GH_REPO).
 #
 #   release-version.sh <chromium_version.txt>
@@ -21,13 +21,13 @@ fail() {
 
 semver='^v([0-9]+)\.([0-9]+)\.([0-9]+)$'
 chromium_re='^([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$'
-core="$(tr -d '[:space:]' < arcomium/VERSION)"
+core="$(tr -d '[:space:]' < alerse/VERSION)"
 chromium="$(tr -d '[:space:]' < "$1")"
-[[ "v$core" =~ $semver ]] || fail "arcomium/VERSION is '$core', not MAJOR.MINOR.PATCH."
+[[ "v$core" =~ $semver ]] || fail "alerse/VERSION is '$core', not MAJOR.MINOR.PATCH."
 core_patch=${BASH_REMATCH[3]}
 
 # Sets $stamp to the browser's Chromium version: Chromium's $1 with
-# Arcomium's PATCH $2 stamped in.
+# Alerse's PATCH $2 stamped in.
 stamp() {
   [[ "$1" =~ $chromium_re ]] || fail "'$1' is not a Chromium version."
   stamp="$((10#${BASH_REMATCH[1]})).$((10#${BASH_REMATCH[2]})).$((10#${BASH_REMATCH[3]}))"
@@ -47,7 +47,7 @@ newer() {
 if [ "${GITHUB_REF_TYPE:-}" = tag ]; then
   tag="$GITHUB_REF_NAME"
   [ "$tag" = "v$core" ] ||
-    fail "Tag $tag is not v$core, v + arcomium/VERSION. Bump the arcomium submodule or fix the tag."
+    fail "Tag $tag is not v$core, v + alerse/VERSION. Bump the alerse submodule or fix the tag."
   stamp "$chromium" "$core_patch"
   ours="$stamp"
   err="$(mktemp)"
@@ -65,7 +65,7 @@ if [ "${GITHUB_REF_TYPE:-}" = tag ]; then
       stamp "$latest_chromium" "$latest_patch"
       theirs="$stamp"
       newer "$ours" "$theirs" ||
-        fail "$tag on Chromium $chromium is $ours, not above $theirs of $latest_tag on Chromium $latest_chromium: the installer would not update it. Raise Arcomium's PATCH above $latest_patch."
+        fail "$tag on Chromium $chromium is $ours, not above $theirs of $latest_tag on Chromium $latest_chromium: the installer would not update it. Raise Alerse's PATCH above $latest_patch."
       echo "Chromium version $ours, above $theirs of $latest_tag."
     fi
   elif grep -q 'HTTP 404' "$err"; then
@@ -77,8 +77,8 @@ if [ "${GITHUB_REF_TYPE:-}" = tag ]; then
   rm -f "$err"
 fi
 
-echo "Arcomium $core, Chromium $chromium"
+echo "Alerse $core, Chromium $chromium"
 {
-  echo "arcomium=$core"
+  echo "alerse=$core"
   echo "chromium=$chromium"
 } >> "$GITHUB_OUTPUT"

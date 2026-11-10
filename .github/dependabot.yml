@@ -1,5 +1,5 @@
 # Pull requests for new versions of the pinned actions and the submodules
-# (arcomium and ungoogled-chromium-portablelinux).
+# (alerse and ungoogled-chromium-portablelinux).
 version: 2
 updates:
   - package-ecosystem: github-actions
