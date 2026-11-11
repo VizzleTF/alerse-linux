@@ -102,9 +102,9 @@ appimagetool \
 popd
 wait
 
-# Alerse's AppImages (up to 0.1.7) look for Alerse-*.AppImage.zsync in the
-# latest release: the same file under that name updates them to Alerse's AppImage,
-# which it names.
-cp "$_release_dir/$_release_name.AppImage.zsync" \n    "$_release_dir/Alerse-$_version-$_arch.AppImage.zsync"
+# AppImages of releases up to 0.1.7 look for Arcomium-*.AppImage.zsync (the
+# product's earlier name) in the latest release: the same file under that name
+# updates them to Alerse's AppImage, which it names.
+cp "$_release_dir/$_release_name.AppImage.zsync"     "$_release_dir/Arcomium-$_version-$_arch.AppImage.zsync"
 
 rm -rf "$_tarball_dir" "$_app_dir"
