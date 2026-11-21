@@ -10,7 +10,9 @@ Linux builds of [Alerse](https://github.com/VizzleTF/alerse), an Arc-style brows
 on ungoogled-chromium. This repository builds the
 [alerse](https://github.com/VizzleTF/alerse) patch series on top of
 [ungoogled-chromium-portablelinux](https://github.com/ungoogled-software/ungoogled-chromium-portablelinux);
-both are git submodules.
+both are git submodules. The core's series on `main` is for Chromium 157 and
+ungoogled-chromium-portablelinux is still on 156, so the `alerse` submodule follows the
+core's `chromium-156` branch until upstream moves to 157.
 
 ![Alerse: the Personal Space with pinned items, a Reading folder and favorites](https://raw.githubusercontent.com/VizzleTF/alerse/main/docs/images/sidebar.png)
 
